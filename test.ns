@@ -1,7 +1,8 @@
 put("hello"); put("Great")
 x = 1+2 *43.3
 
-# hi
-
+// hi this is a test
+put("hi again!!!") // this should be commented out
+hi
 
 2 * 4

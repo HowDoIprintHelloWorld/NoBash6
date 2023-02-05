@@ -20,9 +20,9 @@ If the letter is a '"', then switch 'appendmode' on or off
 
 
 If the letter is newline or ';', make a new line
-If the letter is space or newline put append the previous tokenline to current line
-If the letter is in splitters append the theprevious tokenline to currentline and this letter
-Otherwise just append the letter to tokenline
+If the letter is space or newline put append the previous tokenHolder to current line
+If the letter is in splitters append the theprevious tokenHolder to currentline and this letter
+Otherwise just append the letter to tokenHolder
 
 """
 REPLACERS = {"**":" pow ", "==": " iseq "}
@@ -48,46 +48,68 @@ def addSpaces(text):
 
 
 
-def appendLine(lines, tmpline, tokenline):
-  tokenline = appendToken(tmpline, tokenline)
-  lines.append(tmpline)
-  return [], tokenline
+def appendLine(lines, currentLine, tokenHolder):
+  tokenHolder = appendToken(currentLine, tokenHolder)
+  lines.append(currentLine)
+  return [], tokenHolder
 
   
-def appendToken(tmpline, tokenline):
-  if tokenline:
-    tmpline.append(tokenline)
+def appendToken(currentLine, tokenHolder):
+  if tokenHolder:
+    currentLine.append(tokenHolder)
   return ""
 
 
 def iterLetters(text):
   lines = [] # Finished file split
-  tokenline = "" # temporary holder for unfinished token
-  tmpline = []
+  tokenHolder = "" # temporary holder for unfinished token
+  currentLine = [] # holder for line
   appendMode = True
+  previousDash = False
+  commentMode = False
   
   for letter in text:
+    if commentMode:
+      if letter in ["\n", ";"]:
+        commentMode = False  
+      continue
+
     if letter == '"':
       appendMode = not appendMode
       if not appendMode:
-        tokenline = appendToken(tmpline, tokenline)
+        tokenHolder = appendToken(currentLine, tokenHolder)
       
-      tokenline += letter
+      tokenHolder += letter
+      previousDash = False
+    
       
+    # Adds to the token, and essentially invalidates all checks for newlines, comments etc
     elif not appendMode:
-      tokenline += letter
+      tokenHolder += letter
+
+    # Handles comments. Simply skips to the next line if there were two '/'
+    elif letter == "/":
+      if previousDash:
+        currentLine, tokenHolder = appendLine(lines, currentLine, "")
+        commentMode = True
+        previousDash = False
+      else:
+        previousDash = True
       
+    # Makes a new line if theres a newline character or a semi-colon
     elif letter in ["\n", ";"]:
-      tmpline, tokenline = appendLine(lines, tmpline, tokenline)
+      currentLine, tokenHolder = appendLine(lines, currentLine, tokenHolder)
       continue
       
+    # Finishes token if theres a space
     elif letter == " ":
-      tokenline = appendToken(tmpline, tokenline)
-      
+      tokenHolder = appendToken(currentLine, tokenHolder)
+    
+    # Simply adds the current letter to the temporary token
     else:
-      tokenline += letter
+      tokenHolder += letter
 
-  appendLine(lines, tmpline, tokenline)
+  appendLine(lines, currentLine, tokenHolder)
   
   return lines
 
