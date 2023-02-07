@@ -19,9 +19,7 @@ def makeToken(t):
 def tokenizeLines(lines):
   tokenizedLines = []
   for line in lines:
-    tokenizedLines.append(
-      mathToFuncs(
-        [makeToken(t) for t in line]
-      )
-    )
+    line = [makeToken(t) for t in line]
+    # line = mathToFuncs(line)
+    tokenizedLines.append(line)
   return tokenizedLines
